@@ -13,7 +13,7 @@ public class OrderServiceExceptionHandler {
     @ExceptionHandler(ClientConnectionException.class)
     public ResponseEntity<ErrorResponse> handleClientConnectionException(ClientConnectionException ex, WebRequest request) {
         String path =  request.getDescription(false);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseBuilder(path, ex.getHttpStatus(), ex.getErrorMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponseBuilder(path, ex.getHttpStatus(), ex.getErrorMessage()));
     }
     private ErrorResponse errorResponseBuilder(String url, HttpStatusCode httpCode, String errorMessage) {
         return ErrorResponse.builder().httpStatus(httpCode.toString()).url(url).errorMessage(errorMessage).build();

@@ -1,14 +1,15 @@
 package com.order.management.service;
 
-import com.order.management.client.ProductServiceClient;
+import com.order.management.client.CartServiceClient;
+import com.order.management.exception.EmptyCartItemsException;
 import com.order.management.model.Cart;
-import com.order.management.model.CartProduct;
 import com.order.management.model.Orders;
 import com.order.management.model.OrderItems;
 import com.order.management.repository.OrderItemRepository;
 import com.order.management.repository.OrderRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,7 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderService implements OrderServiceInterface {
 
-    private final ProductServiceClient productServiceClient;
+    private final CartServiceClient cartServiceClient;
 
     private final OrderRepository orderRepository;
 
@@ -30,16 +31,21 @@ public class OrderService implements OrderServiceInterface {
     @Override
     public Orders placeOrder(Long cartId) {
         log.info("Entering into place order method for the cartId {}", cartId);
-        // Calling product service to get the cart details for this cartId
-        Cart cart = productServiceClient.getCartFromProductService(cartId);
-        log.info("Building order details to save into order DB and cart detail is {}", cart);
-        List<OrderItems> orderItemsList = orderItemRepository.saveAll(buildOrderItems(cart));
-        Orders order = Orders.builder()
-                .orderItems(orderItemsList)
-                .totalCost(calculateTotalCost(cart))
-                .orderDate(LocalDate.now())
-                .build();
-        return orderRepository.save(order);
+        // Calling cart service to get the cart details for this cartId
+        Cart cart = cartServiceClient.getCartFromCartService(cartId);
+        if (cart != null && !cart.getCartProducts().isEmpty()) {
+            log.info("Building order details to save into order DB and cart detail is {}", cart);
+            List<OrderItems> orderItemsList = orderItemRepository.saveAll(buildOrderItems(cart));
+            Orders order = Orders.builder()
+                    .orderItems(orderItemsList)
+                    .totalCost(calculateTotalCost(cart))
+                    .orderDate(LocalDate.now())
+                    .build();
+            return orderRepository.save(order);
+        }
+        else {
+            throw new EmptyCartItemsException("No items found in cart. Could not place order", HttpStatus.NOT_FOUND);
+        }
     }
 
     private BigDecimal calculateTotalCost(Cart cart) {

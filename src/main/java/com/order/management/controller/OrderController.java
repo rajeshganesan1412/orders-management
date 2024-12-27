@@ -23,4 +23,10 @@ public class OrderController {
        return orderServiceInterface.placeOrder(cartId);
     }
 
+    @GetMapping("/order/{orderId}")
+    public Orders getOrderById(@PathVariable Long orderId) {
+        log.info("Entering into get orders by id");
+        return orderServiceInterface.getOrdersById(orderId);
+    }
+
 }

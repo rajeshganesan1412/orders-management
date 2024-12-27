@@ -2,6 +2,7 @@ package com.order.management.service;
 
 import com.order.management.client.CartServiceClient;
 import com.order.management.exception.EmptyCartItemsException;
+import com.order.management.exception.OrderNotFoundException;
 import com.order.management.model.Cart;
 import com.order.management.model.Orders;
 import com.order.management.model.OrderItems;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -46,6 +48,13 @@ public class OrderService implements OrderServiceInterface {
         else {
             throw new EmptyCartItemsException("No items found in cart. Could not place order", HttpStatus.NOT_FOUND);
         }
+    }
+
+    @Override
+    public Orders getOrdersById(Long orderId) {
+        log.info("Get orders by id");
+        return Optional.of(orderRepository.findById(orderId)).get().orElseThrow(()->
+                new OrderNotFoundException("No Orders found for this order id", HttpStatus.NOT_FOUND));
     }
 
     private BigDecimal calculateTotalCost(Cart cart) {

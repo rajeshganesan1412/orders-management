@@ -8,4 +8,6 @@ public interface OrderServiceInterface {
     Orders placeOrder(Long cartId);
 
     Orders getOrdersById(Long orderId);
+
+    Orders getOrdersByUserId(String userId);
 }

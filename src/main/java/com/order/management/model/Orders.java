@@ -30,6 +30,8 @@ public class Orders implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long orderId;
 
+    private String userId;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "order_id")
     private List<OrderItems> orderItems;

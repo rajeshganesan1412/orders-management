@@ -24,6 +24,8 @@ public class Cart implements Serializable {
     @GeneratedValue
     private Long cartId;
 
+    private String userId;
+
     private List<CartProduct> cartProducts;
 
 }

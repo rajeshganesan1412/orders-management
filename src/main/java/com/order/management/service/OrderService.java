@@ -6,6 +6,7 @@ import com.order.management.exception.OrderNotFoundException;
 import com.order.management.model.Cart;
 import com.order.management.model.Orders;
 import com.order.management.model.OrderItems;
+import com.order.management.producer.OrderMessageProducer;
 import com.order.management.repository.OrderItemRepository;
 import com.order.management.repository.OrderRepository;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,8 @@ public class OrderService implements OrderServiceInterface {
 
     private final OrderItemRepository orderItemRepository;
 
+    private final OrderMessageProducer orderMessageProducer;
+
     @Override
     public Orders placeOrder(Long cartId) {
         log.info("Entering into place order method for the cartId {}", cartId);
@@ -39,11 +42,15 @@ public class OrderService implements OrderServiceInterface {
             log.info("Building order details to save into order DB and cart detail is {}", cart);
             List<OrderItems> orderItemsList = orderItemRepository.saveAll(buildOrderItems(cart));
             Orders order = Orders.builder()
+                    .userId(cart.getUserId())
                     .orderItems(orderItemsList)
                     .totalCost(calculateTotalCost(cart))
                     .orderDate(LocalDate.now())
                     .build();
-            return orderRepository.save(order);
+            Orders orders = orderRepository.save(order);
+            orderMessageProducer.sendMessage(orders);
+            return orders;
+
         }
         else {
             throw new EmptyCartItemsException("No items found in cart. Could not place order", HttpStatus.NOT_FOUND);
@@ -54,6 +61,13 @@ public class OrderService implements OrderServiceInterface {
     public Orders getOrdersById(Long orderId) {
         log.info("Get orders by id");
         return Optional.of(orderRepository.findById(orderId)).get().orElseThrow(()->
+                new OrderNotFoundException("No Orders found for this order id", HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    public Orders getOrdersByUserId(String userId) {
+        log.info("Get orders by user id");
+        return Optional.of(orderRepository.findByUserId(userId)).get().orElseThrow(()->
                 new OrderNotFoundException("No Orders found for this order id", HttpStatus.NOT_FOUND));
     }
 
@@ -69,6 +83,7 @@ public class OrderService implements OrderServiceInterface {
         List<OrderItems> orderItemsList = new ArrayList<>();
         cart.getCartProducts().forEach(cartProduct -> {
             OrderItems orderItems = OrderItems.builder()
+                    .productId(cartProduct.getCartProductId())
                     .productName(cartProduct.getProductName())
                     .description(cartProduct.getDescription())
                     .category(cartProduct.getCategory())

@@ -27,6 +27,8 @@ public class OrderItems implements Serializable {
     @GeneratedValue
     private Long orderItemId;
 
+    private Long productId;
+
     private String productName;
 
     private String description;

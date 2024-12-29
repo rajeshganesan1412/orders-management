@@ -1,6 +1,6 @@
 package com.order.management.config;
 
-import com.order.management.model.Orders;
+import com.order.management.model.OrderNotificationMessage;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ public class KafkaProducerConfig {
     private String bootstrapServer;
 
     @Bean
-    public ProducerFactory<String, Orders> producerFactory() {
+    public ProducerFactory<String, OrderNotificationMessage> producerFactory() {
         Map<String, Object> configMap = new HashMap<>();
 
         configMap.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);

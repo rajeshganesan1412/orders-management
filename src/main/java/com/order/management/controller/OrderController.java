@@ -36,4 +36,10 @@ public class OrderController {
         return orderServiceInterface.getOrdersByUserId(userId);
     }
 
+    @PostMapping("/order/cancel/{orderId}")
+    public Orders cancelOrder(@PathVariable Long orderId) {
+        log.info("Entering into cancel order API");
+        return orderServiceInterface.cancelOrder(orderId);
+    }
+
 }

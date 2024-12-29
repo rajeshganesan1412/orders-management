@@ -1,9 +1,11 @@
 package com.order.management.service;
 
 import com.order.management.client.CartServiceClient;
+import com.order.management.enumuration.OrderStatus;
 import com.order.management.exception.EmptyCartItemsException;
 import com.order.management.exception.OrderNotFoundException;
 import com.order.management.model.Cart;
+import com.order.management.model.OrderNotificationMessage;
 import com.order.management.model.Orders;
 import com.order.management.model.OrderItems;
 import com.order.management.producer.OrderMessageProducer;
@@ -44,17 +46,30 @@ public class OrderService implements OrderServiceInterface {
             Orders order = Orders.builder()
                     .userId(cart.getUserId())
                     .orderItems(orderItemsList)
+                    .orderStatus(OrderStatus.PLACED)
                     .totalCost(calculateTotalCost(cart))
                     .orderDate(LocalDate.now())
                     .build();
             Orders orders = orderRepository.save(order);
-            orderMessageProducer.sendMessage(orders);
+            OrderNotificationMessage orderNotificationMessage = buildOrderNotificationMessage(orders, cartId);
+            orderMessageProducer.sendMessage(orderNotificationMessage);
             return orders;
-
         }
         else {
             throw new EmptyCartItemsException("No items found in cart. Could not place order", HttpStatus.NOT_FOUND);
         }
+    }
+
+    private static OrderNotificationMessage buildOrderNotificationMessage(Orders order, Long cartId) {
+        return OrderNotificationMessage.builder()
+                .cartId(cartId)
+                .orderId(order.getOrderId())
+                .userId(order.getUserId())
+                .orderItems(order.getOrderItems())
+                .orderStatus(order.getOrderStatus())
+                .orderDate(order.getOrderDate())
+                .totalCost(order.getTotalCost())
+                .build();
     }
 
     @Override
@@ -69,6 +84,17 @@ public class OrderService implements OrderServiceInterface {
         log.info("Get orders by user id");
         return Optional.of(orderRepository.findByUserId(userId)).get().orElseThrow(()->
                 new OrderNotFoundException("No Orders found for this order id", HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    public Orders cancelOrder(Long orderId) {
+        log.info("cancelling the order for order id {}", orderId);
+        Orders order = Optional.of(orderRepository.findById(orderId)).get().orElseThrow(()->
+                new OrderNotFoundException("No Orders found for this order id", HttpStatus.NOT_FOUND));
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        Orders savedOrder = orderRepository.save(order);
+        orderMessageProducer.sendMessage(buildOrderNotificationMessage(savedOrder, null));
+        return savedOrder;
     }
 
     private BigDecimal calculateTotalCost(Cart cart) {

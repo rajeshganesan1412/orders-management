@@ -10,4 +10,6 @@ public interface OrderServiceInterface {
     Orders getOrdersById(Long orderId);
 
     Orders getOrdersByUserId(String userId);
+
+    Orders cancelOrder(Long orderId);
 }

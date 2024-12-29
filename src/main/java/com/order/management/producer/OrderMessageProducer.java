@@ -1,6 +1,6 @@
 package com.order.management.producer;
 
-import com.order.management.model.Orders;
+import com.order.management.model.OrderNotificationMessage;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
@@ -15,13 +15,13 @@ import org.springframework.stereotype.Service;
 public class OrderMessageProducer {
 
     private static final Logger log = LoggerFactory.getLogger(OrderMessageProducer.class);
-    private final KafkaTemplate<String, Orders> kafkaTemplate;
+    private final KafkaTemplate<String, OrderNotificationMessage> kafkaTemplate;
 
     @Value("${order.message.topic}")
     private String orderMessageTopic;
 
-    public void sendMessage(Orders orders) {
-        ProducerRecord<String, Orders> record = new ProducerRecord<>(orderMessageTopic, orders);
+    public void sendMessage(OrderNotificationMessage orderNotificationMessage) {
+        ProducerRecord<String, OrderNotificationMessage> record = new ProducerRecord<>(orderMessageTopic, orderNotificationMessage);
         kafkaTemplate.send(record)
                 .toCompletableFuture()
                 .whenComplete((result, ex) -> {

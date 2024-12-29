@@ -2,9 +2,6 @@ package com.order.management.model;
 
 import com.order.management.enumuration.OrderStatus;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,23 +23,19 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-public class Orders implements Serializable {@Id
-@GeneratedValue(strategy = GenerationType.SEQUENCE)
-private Long orderId;
+public class OrderNotificationMessage implements Serializable {
+
+    private Long orderId;
 
     private String userId;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "order_id")
+    private Long cartId;
+
     private List<OrderItems> orderItems;
 
-    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     private BigDecimal totalCost;
 
     private LocalDate orderDate;
-
-
 }
